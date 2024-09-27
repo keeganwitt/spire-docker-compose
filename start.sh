@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -o errexit -o nounset -o pipefail
 
-
 echo "Starting SPIRE Server"
 docker-compose up -d spire-server
 
