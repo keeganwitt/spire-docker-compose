@@ -1,3 +1,3 @@
 # spire-docker-compose
 
-This Repo is a simple Docker Compose setup of SPIRE.
+This repo is a simple Docker Compose setup of SPIRE.

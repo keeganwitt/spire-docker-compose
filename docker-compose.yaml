@@ -12,5 +12,4 @@ services:
     hostname: spire-agent
     volumes:
       - ./spire/agent:/opt/spire/conf/agent
-#      - /var/run/:/var/run/
     command: ["-config", "/opt/spire/conf/agent/agent.conf"]
