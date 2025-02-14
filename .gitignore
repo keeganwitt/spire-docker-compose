@@ -1,3 +1,3 @@
 .idea/
 
-/spire/agent/bootstrap.crt
+/spire/agent/conf/trust_bundle.pem

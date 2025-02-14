@@ -1,17 +1,46 @@
 services:
   spire-server:
-    image: ghcr.io/spiffe/spire-server:1.11.2
-    platform: linux/amd64
     hostname: spire-server
-    volumes:
-      - ./spire/server:/opt/spire/conf/server
-      - ./bundles:/opt/spire/bundles
-    command: ["-config", "/opt/spire/conf/server/server.conf"]
-  spire-agent:
-    image: ghcr.io/spiffe/spire-agent:1.11.2
+    image: ghcr.io/spiffe/spire-server:${SPIRE_VERSION}
     platform: linux/amd64
-    depends_on: ["spire-server"]
-    hostname: spire-agent
     volumes:
-      - ./spire/agent:/opt/spire/conf/agent
+      - ./spire/server/conf:/opt/spire/conf/server:r
+    command: ["-config", "/opt/spire/conf/server/server.conf"]
+    privileged: true
+    healthcheck:
+      test: ["CMD", "/opt/spire/bin/spire-server", "healthcheck", "-verbose"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  spire-agent:
+    hostname: spire-agent
+    image: ghcr.io/spiffe/spire-agent:${SPIRE_VERSION}
+    platform: linux/amd64
+    depends_on:
+      spire-server:
+        condition: service_healthy
+    volumes:
+      - ./spire/agent/conf:/opt/spire/conf/agent:r
+      - agent-socket:/opt/spire/sockets:rw
+      - /var/run/docker.sock:/var/run/docker.sock:r
     command: ["-config", "/opt/spire/conf/agent/agent.conf"]
+    privileged: true
+    healthcheck:
+      test: ["CMD", "/opt/spire/bin/spire-agent", "healthcheck", "-socketPath", "/opt/spire/sockets/workload_api.sock", "-verbose"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  spire-workload:
+    hostname: spire-workload
+    image: spiffe-helper
+    platform: linux/amd64
+    depends_on:
+      spire-agent:
+        condition: service_healthy
+    volumes:
+      - ./spire/spiffe-helper/conf:/etc/spiffe-helper:r
+      - agent-socket:/opt/spire/sockets:r
+    command: ["-config", "/etc/spiffe-helper/helper.conf"]
+
+volumes:
+  agent-socket:
