@@ -24,14 +24,14 @@ services:
       - agent-socket:/opt/spire/sockets:rw
       - /var/run/docker.sock:/var/run/docker.sock:r
     command: ["-config", "/opt/spire/conf/agent/agent.conf"]
-    privileged: true
+    pid: "host"
     healthcheck:
       test: ["CMD", "/opt/spire/bin/spire-agent", "healthcheck", "-socketPath", "/opt/spire/sockets/workload_api.sock", "-verbose"]
       interval: 10s
       timeout: 5s
       retries: 3
-  spire-workload:
-    hostname: spire-workload
+  spiffe-helper:
+    hostname: spiffe-helper
     image: spiffe-helper:local
     platform: linux/amd64
     depends_on:
@@ -41,6 +41,8 @@ services:
       - ./spire/spiffe-helper/conf:/etc/spiffe-helper:r
       - agent-socket:/opt/spire/sockets:r
     command: ["-config", "/etc/spiffe-helper/helper.conf"]
+    ports:
+      - "8080:8081"
 
 volumes:
   agent-socket:
