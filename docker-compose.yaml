@@ -5,6 +5,7 @@ services:
     platform: linux/amd64
     volumes:
       - ./spire/server/conf:/opt/spire/conf/server:r
+      - server-socket:/opt/spire/sockets:rw
     command: ["-config", "/opt/spire/conf/server/server.conf"]
     privileged: true
     healthcheck:
@@ -38,14 +39,23 @@ services:
         condition: service_healthy
     entrypoint: ["/opt/spire/bin/spire-server"]
     command:
-      - entry create
-      - -selector docker:label:com.docker.compose.service:spiffe-helper
-      - -spiffeID spiffe://example.org/workload/spiffe-helper
-      - -parentID spiffe://example.org/spire/agent/x509pop/02b8e7713492fdf93d43369e9c6f50d28bef9fa8
-#      - -parentID spiffe://example.org/node/agent
-  spiffe-helper:
-    hostname: spiffe-helper
-    image: spiffe-helper:local
+      - entry
+      - create
+      - -socketPath
+      - /opt/spire/sockets/server.sock
+      - -selector
+      - docker:label:com.docker.compose.service:spire-workload
+      - -spiffeID
+      - spiffe://example.org/workload/spire-workload
+      - -parentID
+      - spiffe://example.org/spire/agent/x509pop/02b8e7713492fdf93d43369e9c6f50d28bef9fa8
+#      - -parentID
+#      - spiffe://example.org/node/agent
+    volumes:
+      - server-socket:/opt/spire/sockets:r
+  spire-workload:
+    hostname: spire-workload
+    image: ghcr.io/spiffe/spire-agent:${SPIRE_VERSION}
     platform: linux/amd64
     depends_on:
       spire-agent:
@@ -53,11 +63,12 @@ services:
       create-entries:
         condition: service_started
     volumes:
-      - ./spire/spiffe-helper/conf:/etc/spiffe-helper:r
       - agent-socket:/opt/spire/sockets:r
-    command: ["-config", "/etc/spiffe-helper/helper.conf"]
-    ports:
-      - "8080:8081"
+      - svids:/run/svids:rw
+    entrypoint: ["/opt/spire/bin/spire-agent"]
+    command: ["api", "fetch", "x509", "-socketPath", "/opt/spire/sockets/workload_api.sock"]
+#    command: ["api", "fetch", "jwt", "-audience", "some-audience", "-socketPath", "/opt/spire/sockets/workload_api.sock"]
 
 volumes:
   agent-socket:
+  server-socket:

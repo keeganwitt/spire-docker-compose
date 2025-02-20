@@ -14,5 +14,5 @@ docker-compose up -d --wait create-entries
 echo "Starting SPIRE agent ..."
 docker-compose up -d --wait spire-agent
 
-echo "Starting spiffe-helper ..."
-docker-compose up -d spiffe-helper
+echo "Starting spire-workload ..."
+docker-compose up -d spire-workload
