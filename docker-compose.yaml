@@ -64,7 +64,6 @@ services:
         condition: service_started
     volumes:
       - agent-socket:/opt/spire/sockets:r
-      - svids:/run/svids:rw
     entrypoint: ["/opt/spire/bin/spire-agent"]
     command: ["api", "fetch", "x509", "-socketPath", "/opt/spire/sockets/workload_api.sock"]
 #    command: ["api", "fetch", "jwt", "-audience", "some-audience", "-socketPath", "/opt/spire/sockets/workload_api.sock"]
